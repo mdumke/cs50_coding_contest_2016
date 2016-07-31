@@ -1,7 +1,7 @@
 /***
  * maze_runner.c
  *
- * finds the path through a maze read from standard input
+ * finds the shortest path through a maze read from standard input
  ***/
 
 #include <stdio.h>
@@ -9,10 +9,10 @@
 #include "cs50.h"
 
 #define MAX_N 1000
-#define DOWN 1
-#define UP 2
-#define LEFT 3
-#define RIGHT 4
+#define DOWN 0
+#define UP 1
+#define LEFT 2
+#define RIGHT 3
 
 // datastructures to perform DFS with
 typedef struct action
@@ -47,14 +47,135 @@ fringe;
 
 // function declarations
 char** read_maze(int *n, int *m);
+int** init_closed_set(int n, int m);
+void insert_into_closed_set(state *s, int **set);
+int is_in_closed_set(state *s, int **set);
 int* get_actions(state *s, char **maze, int *num_actions);
 int coord(int maze_coordinate);
 state* make_state(int row, int col);
 fringe* fringe_init();
+action* make_action(int name, action *strategy);
+fringe_item* make_fringe_item(state *state, action *strategy);
 void fringe_enqueue(fringe *f, fringe_item *item);
 fringe_item* fringe_dequeue(fringe *f);
 int is_goal_state(state *s, int n, int m);
+state* apply(state *s, int action_name);
 int is_empty(fringe *f);
+
+// displays the strategy and frees the memory used to store it
+void display_and_free(action *strategy, state *s)
+{
+    if (strategy->next != NULL) {
+        display_and_free(strategy->next, apply(s, strategy->name));
+    }
+
+    char *names[] = {"DOWN", "UP", "LEFT", "RIGHT"};
+    printf("%s\n", names[strategy->name]);
+    free(strategy);
+    return;
+}
+
+int main(void)
+{
+    int n, m;
+    char **maze = read_maze(&n, &m);
+
+    // initialization
+    fringe *f = fringe_init();
+    fringe_enqueue(f, make_fringe_item(make_state(0, 0), NULL));
+    int **closed_set = init_closed_set(n, m);
+
+    // set up search helper-variables
+    fringe_item *current_item;
+    state *current_state;
+    action *current_strategy;
+    state *next_state;
+    int num_actions, i;
+    int *available_actions;
+    int strategy_found = 0;
+    action *strategy;
+
+    // perform breadth first search
+    while (!is_empty(f)) {
+        current_item = fringe_dequeue(f);
+        current_state = current_item->state;
+        current_strategy = current_item->strategy;
+
+        // goal state-check
+        if (is_goal_state(current_state, n, m)) {
+            strategy = current_strategy;
+            strategy_found = 1;
+            break;
+        }
+
+        // only proceed if the node has not been visited
+        if (is_in_closed_set(current_state, closed_set)) {
+            // free item?
+            continue;
+        }
+
+        // put the current node into the closed set
+        insert_into_closed_set(current_state, closed_set);
+
+
+        // expand current node
+        available_actions = get_actions(current_state, maze, &num_actions);
+
+        for (i = 0; i < num_actions; i++) {
+            next_state = apply(current_state, available_actions[i]);
+
+            // add this state/action-pair to the fringe
+            action *new_action = make_action(available_actions[i], current_strategy);
+            fringe_enqueue(f, make_fringe_item(next_state, new_action));
+        }
+
+        free(current_item);
+    }
+
+
+    if (!strategy_found) {
+        // don't do anything
+    }
+    else {
+        display_and_free(strategy, make_state(0, 0));
+    }
+
+    // free maze memory
+    return 0;
+}
+
+// returns an nxm matrix of 0s
+int** init_closed_set(int n, int m)
+{
+    int **closed_set = malloc(sizeof(int*) * n);
+    int i, j;
+    int *row;
+
+    for (i = 0; i < n; i++) {
+        row = malloc(sizeof(int) * m);
+
+        for (j = 0; j < m; j++) {
+            row[j] = 0;
+        }
+
+        closed_set[i] = row;
+    }
+
+    return closed_set;
+}
+
+// marks the state as being in the set
+void insert_into_closed_set(state *s, int **set)
+{
+    set[s->row][s->col] = 1;
+    return;
+}
+
+// returns 1 if the state is in the closed set, else 0
+int is_in_closed_set(state *s, int **set)
+{
+    return set[s->row][s->col];
+}
 
 // returns a new fringe item filled with the given data
 fringe_item* make_fringe_item(state *state, action *strategy)
@@ -67,11 +188,11 @@ fringe_item* make_fringe_item(state *state, action *strategy)
 }
 
 // returns a new action-item that can be part of a strategy
-action* make_action(int name)
+action* make_action(int name, action *strategy)
 {
     action *new_action = malloc(sizeof(action));
     new_action->name = name;
-    new_action->next = NULL;
+    new_action->next = strategy;
     return new_action;
 }
 
@@ -93,77 +214,12 @@ state* apply(state *s, int action_name)
             new_state->col -= 1;
             break;
         case RIGHT:
-            new_state->col += 2;
+            new_state->col += 1;
             break;
     }
 
     return new_state;
 }
-
-
-int main(void)
-{
-    int n, m;
-    char **maze = read_maze(&n, &m);
-
-    // initialize the fringe
-    fringe *f = fringe_init();
-    fringe_enqueue(f, make_fringe_item(make_state(0, 0), NULL));
-
-    // set up search helper-variables
-    fringe_item *current_item;
-    state *current_state;
-    state *next_state;
-    int num_actions, i;
-    int *available_actions;
-    int strategy_found = 0;
-    action *strategy;
-
-    // perform breadth first search
-    while (!is_empty(f)) {
-        current_item = fringe_dequeue(f);
-        current_state = current_item->state;
-
-        // goal state-check
-        if (is_goal_state(current_state, n, m)) {
-            strategy = current_item->strategy;
-            strategy_found = 1;
-            break;
-        }
-
-        // put the current node into the closed set
-
-
-        // expand current node
-        available_actions = get_actions(current_state, maze, &num_actions);
-
-        for (i = 0; i < num_actions; i++) {
-            next_state = apply(current_state, available_actions[i]);
-
-            // add this state/action-pair to the fringe
-        }
-
-    }
-
-
-    if (!strategy_found) {
-        printf("Could not solve this maze :(\n");
-    }
-
-
-
-    // free maze memory
-    return 0;
-}
-
-
-
-
-
-
-
-
-
 
 // returns 1 if the fringe is of size 0, else 0
 int is_empty(fringe *f)
