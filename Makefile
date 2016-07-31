@@ -13,3 +13,12 @@ x: x.c
 word_reverse: word_reverse.c
 	clang -ggdb3 -O0 -std=c11 word_reverse.c -o word_reverse cs50.o
 
+money: money.c
+	clang -ggdb3 -O0 -std=c11 money.c -o money cs50.o -lm
+
+one_day_more: one_day_more.c
+	clang -ggdb3 -O0 -std=c11 one_day_more.c -o one_day_more cs50.o
+
+name_your_cat: name_your_cat.c
+	clang -ggdb3 -O0 -std=c11 name_your_cat.c -o name_your_cat cs50.o
+
