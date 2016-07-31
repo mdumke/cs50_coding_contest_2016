@@ -65,14 +65,36 @@ int is_empty(fringe *f);
 // displays the strategy and frees the memory used to store it
 void display_and_free(action *strategy, state *s)
 {
+
+    char *names[] = {"DOWN", "UP", "LEFT", "RIGHT"};
+    printf("[%d, %d]\n", s->row, s->col);
+
     if (strategy->next != NULL) {
         display_and_free(strategy->next, apply(s, strategy->name));
     }
 
-    char *names[] = {"DOWN", "UP", "LEFT", "RIGHT"};
-    printf("%s\n", names[strategy->name]);
     free(strategy);
     return;
+}
+
+
+// returns the linked list in reverse order
+action* reverse(action *strategy) {
+    // make sure there's at least one element
+    if (strategy == NULL) {
+        return NULL;
+    }
+
+    // create first element
+    action *copy = make_action(strategy->name, NULL);
+    action *cursor = strategy->next;
+
+    while (cursor != NULL) {
+        copy = make_action(cursor->name, copy);
+        cursor = cursor->next;
+    }
+
+    return copy;
 }
 
 int main(void)
@@ -137,7 +159,8 @@ int main(void)
         // don't do anything
     }
     else {
-        display_and_free(strategy, make_state(0, 0));
+        display_and_free(reverse(strategy), make_state(0, 0));
+        printf("[%d, %d]\n", n - 1, m - 1);
     }
 
     // free maze memory
