@@ -75,47 +75,6 @@ void insert_into_closed_list(list *closed_list, state *s);
 int is_same_state(state *s1, state *s2);
 int is_in_closed_list(list *closed_list, state *s);
 state* apply(state *s, offer *o);
-void print_state(state *s);
-
-void display_fringe(fringe *f)
-{
-    printf("fringe: [");
-    node *cursor = f->head;
-    int i;
-
-    while (cursor != NULL) {
-        printf("(%d: [", cursor->time);
-
-        for (i = 0; i < cursor->s->num_items; i++) {
-            printf("%d ", cursor->s->items[i]);
-        }
-
-        printf("], ");
-//         printf("], %d, %d), ", cursor->time, cursor->depth);
-        cursor = cursor->next;
-    }
-    printf("]\n");
-}
-
-void display_closed_list(list *c)
-{
-    list_item *cursor = c->head;
-    printf("closed set: [");
-    int i;
-
-    while (cursor != NULL) {
-        printf("(");
-
-        for (i = 0; i < cursor->s->num_items; i++) {
-            printf("%d ", cursor->s->items[i]);
-        }
-
-        printf("), ");
-        cursor = cursor->next;
-    }
-
-    printf("]\n");
-}
 
 
 int main(void)
@@ -515,19 +474,6 @@ void sort(int *arr, int num_elements)
     }
 
     qsort(arr, num_elements, sizeof(int), compare);
-    return;
-}
-
-void print_state(state *s)
-{
-    printf("state-info:\n  - num_items: %d\n", s->num_items);
-    printf("  - items: [");
-
-    for (int i = 0; i < s->num_items; i++) {
-        printf("%d ", s->items[i]);
-    }
-
-    printf("]\n\n");
     return;
 }
 
