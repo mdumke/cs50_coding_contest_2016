@@ -22,3 +22,5 @@ one_day_more: one_day_more.c
 name_your_cat: name_your_cat.c
 	clang -ggdb3 -O0 -std=c11 name_your_cat.c -o name_your_cat cs50.o
 
+trading_up: trading_up.c
+	clang -ggdb3 -O0 -std=c11 trading_up.c -o trading_up cs50.o

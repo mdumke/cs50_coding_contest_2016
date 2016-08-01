@@ -13,7 +13,7 @@
 typedef struct offer
 {
     int currency_id;
-    float rate;
+    double rate;
     struct offer *next;
 }
 offer;
@@ -36,10 +36,10 @@ offer** generate_exchange_rates_graph(int num_currencies)
 
     // read in currency exchange offers
     int from_currency, to_currency;
-    float rate;
+    double rate;
 
     for (i = 0; i < num_currencies; i++) {
-        scanf("%d %d %f", &from_currency, &to_currency, &rate);
+        scanf("%d %d %lf", &from_currency, &to_currency, &rate);
 
         // add edge to the currency offered for exchange
         offer *new_offer = malloc(sizeof(offer));
@@ -60,10 +60,10 @@ offer** generate_exchange_rates_graph(int num_currencies)
 }
 
 // returns the exchange rate for the currencies as saved in the graph
-float find_rate(int currency_1, int currency_2, offer **offers)
+double find_rate(int currency_1, int currency_2, offer **offers)
 {
     offer *cursor = offers[currency_1];
-    float rate = -1.0;
+    double rate = -1.0;
 
     while (cursor != NULL) {
         if (cursor->currency_id == currency_2) {
@@ -80,9 +80,9 @@ float find_rate(int currency_1, int currency_2, offer **offers)
 // returns 1 if path for currency ids is consistent (or inexistent), else 0
 int is_consistent_path(int cur1, int cur2, int cur3, offer **offers)
 {
-    float rate12 = find_rate(cur1, cur2, offers);
-    float rate23 = find_rate(cur2, cur3, offers);
-    float rate31 = find_rate(cur3, cur1, offers);
+    double rate12 = find_rate(cur1, cur2, offers);
+    double rate23 = find_rate(cur2, cur3, offers);
+    double rate31 = find_rate(cur3, cur1, offers);
 
     // if a path does not exist, the graph will not be inconsistent,
     // so count this as success
@@ -90,8 +90,8 @@ int is_consistent_path(int cur1, int cur2, int cur3, offer **offers)
         return 1;
     }
 
-    float roundtrip_value = rate12 * rate23 * rate31;
-    return fabs(roundtrip_value - 1.0) < 0.0001;
+    double roundtrip_value = rate12 * rate23 * rate31;
+    return fabs(roundtrip_value - 1.0) < 0.003;
 }
 
 int main(void)
